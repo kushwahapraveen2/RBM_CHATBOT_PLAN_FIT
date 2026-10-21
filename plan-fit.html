@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plan-Fit Assistant</title>
+<link rel="icon" href="assets/favicon.png">
+<style>
+@font-face{font-family:"Bull Heavy";src:url("fonts/Bull-Heavy1.otf") format("opentype");font-weight:700}
+@font-face{font-family:"Bull";src:url("fonts/Bull-Regular.otf") format("opentype");font-weight:400}
+@font-face{font-family:"BullText";src:url("fonts/BullText-Regular.ttf") format("truetype");font-weight:400}
+@font-face{font-family:"BullText";src:url("fonts/BullText-Medium.ttf") format("truetype");font-weight:500}
+@font-face{font-family:"BullText";src:url("fonts/BullText-Bold.ttf") format("truetype");font-weight:700}
+
+:root{
+  --navy:#011235; --navy-2:#050d32; --navy-3:#0d2043; --navy-4:#1a2b55;
+  --red:#db0a40; --red-dark:#b00934; --gold:#fab807; --orange:#f19000;
+  --bg:#f3f4f7; --card:#fff; --text:#001136; --muted:#677089; --line:#e3e6ee;
+  --green:#14a05c; --amber:#e8930c; --wa:#25d366; --wa-dark:#075e54;
+  --head:"Bull Heavy","BullText",system-ui,sans-serif;
+  --body:"BullText",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:var(--body);background:var(--bg);color:var(--text);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer}
+h1,h2,h3{font-family:var(--head);font-weight:700;letter-spacing:.2px;margin:0}
+a{color:inherit}
+
+/* ---------- top bar ---------- */
+.topbar{position:sticky;top:0;z-index:1000;background:var(--navy);color:#fff;display:flex;align-items:center;gap:24px;padding:0 28px;height:68px;box-shadow:0 2px 12px rgba(0,0,0,.25)}
+.topbar img{height:18px}
+.topbar .tag{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);border:1px solid rgba(250,184,7,.5);padding:3px 8px;border-radius:20px;white-space:nowrap}
+.tabs{display:flex;gap:4px;margin-left:auto;overflow-x:auto}
+.tabs button{background:none;border:0;color:#c9cfe0;font-size:14px;padding:10px 14px;border-radius:8px;white-space:nowrap;font-weight:500}
+.tabs button:hover{color:#fff;background:rgba(255,255,255,.06)}
+.tabs button.active{color:#fff;background:var(--red)}
+.view{display:none;padding:28px;max-width:1380px;margin:0 auto}
+.view.active{display:block;animation:fade .3s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.card{background:var(--card);border-radius:16px;box-shadow:0 1px 3px rgba(1,18,53,.06),0 6px 24px rgba(1,18,53,.05);padding:22px}
+.eyebrow{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--red);font-weight:700}
+.muted{color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px}
+.pill.green{background:#e3f6ec;color:var(--green)} .pill.amber{background:#fff2dc;color:#b86e00} .pill.red{background:#fde4eb;color:var(--red)} .pill.navy{background:#e7eaf3;color:var(--navy)}
+.btn{border:0;border-radius:10px;padding:10px 16px;font-weight:700;font-size:14px;background:var(--red);color:#fff;transition:.15s}
+.btn:hover{background:var(--red-dark)}
+.btn.ghost{background:transparent;color:var(--navy);border:1.5px solid var(--line)}
+.btn.ghost:hover{border-color:var(--navy)}
+.btn.small{padding:6px 12px;font-size:13px;border-radius:8px}
+.btn.navy{background:var(--navy)} .btn.navy:hover{background:var(--navy-4)}
+.btn:disabled{opacity:.5;cursor:default}
+.sample-note{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.sample-note::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--gold)}
+
+/* ---------- customer agent ---------- */
+.cust{display:grid;grid-template-columns:300px 400px 1fr;gap:24px;align-items:start}
+.scenarios h3{font-size:18px;margin-bottom:4px}
+.scn{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:10px;transition:.15s;color:var(--text)}
+.scn:hover{border-color:var(--navy)}
+.scn.active{border-color:var(--red);box-shadow:0 0 0 3px rgba(219,10,64,.12)}
+.scn .ico{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none;font-size:17px;background:#f0f2f8}
+.scn b{display:block;font-size:14px}
+.scn small{color:var(--muted);font-size:12px;line-height:1.3;display:block;margin-top:2px}
+.scn .ch{font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--red);font-weight:700}
+
+.phone{width:390px;height:780px;border-radius:52px;background:#0b0b10;padding:13px;box-shadow:0 30px 60px rgba(1,18,53,.25),inset 0 0 0 2px #2a2a33;position:relative;margin:0 auto}
+.screen{position:relative;width:100%;height:100%;border-radius:40px;overflow:hidden;background:#f4f5f9;display:flex;flex-direction:column}
+.island{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:112px;height:32px;background:#000;border-radius:20px;z-index:30}
+.statusbar{height:50px;display:flex;justify-content:space-between;align-items:flex-end;padding:0 30px 6px;font-size:14px;font-weight:700;color:#fff;background:var(--navy);flex:none}
+.statusbar .sig{letter-spacing:1px;font-size:11px}
+.chathead{background:var(--navy);color:#fff;padding:10px 16px 12px;display:flex;align-items:center;gap:10px;flex:none}
+.avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--red-dark));display:grid;place-items:center;font-family:var(--head);font-size:13px;flex:none;color:#fff;border:2px solid rgba(255,255,255,.15)}
+.chathead b{font-size:15px;display:block}
+.chathead small{font-size:11.5px;color:#9fe2b9;display:flex;align-items:center;gap:5px}
+.chathead small::before{content:"";width:7px;height:7px;border-radius:50%;background:#3ddc84}
+.chathead .chan{margin-left:auto;font-size:10px;letter-spacing:1px;text-transform:uppercase;border:1px solid rgba(255,255,255,.3);border-radius:10px;padding:2px 8px;color:#dfe3ef}
+.feed{flex:1;overflow-y:auto;padding:14px 12px 8px;display:flex;flex-direction:column;gap:8px;scroll-behavior:smooth}
+.feed::-webkit-scrollbar{width:0}
+.msg{max-width:84%;padding:9px 12px;border-radius:16px;font-size:14px;line-height:1.4;animation:pop .25s ease;word-wrap:break-word}
+@keyframes pop{from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:none}}
+.msg.bot{background:#fff;align-self:flex-start;border-bottom-left-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.msg.user{background:var(--navy);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.msg.sys{align-self:center;background:transparent;color:var(--muted);font-size:11.5px;text-align:center;max-width:95%;padding:2px 8px}
+.msg.sys .ctx{display:inline-flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-top:4px}
+.msg.sys .ctx span{background:#e7eaf3;color:var(--navy);border-radius:8px;padding:2px 7px;font-size:11px}
+.msg.wide{max-width:94%;padding:0;background:transparent;box-shadow:none}
+.typing{align-self:flex-start;background:#fff;border-radius:16px;padding:12px 14px;display:flex;gap:4px;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.typing i{width:7px;height:7px;border-radius:50%;background:#a9b0c2;animation:blink 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes blink{0%,80%,100%{opacity:.3}40%{opacity:1}}
+.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;padding:2px 0 4px;animation:pop .25s ease}
+.chips button{background:#fff;border:1.5px solid var(--red);color:var(--red);border-radius:18px;padding:7px 12px;font-size:13px;font-weight:700}
+.chips button:hover{background:var(--red);color:#fff}
+.chips button.primary{background:var(--red);color:#fff}
+.inputbar{display:flex;gap:8px;padding:10px 12px 22px;background:#fff;border-top:1px solid var(--line);flex:none}
+.inputbar input{flex:1;border:1.5px solid var(--line);border-radius:22px;padding:10px 14px;font-size:14px;font-family:inherit;outline:none}
+.inputbar input:focus{border-color:var(--navy)}
+.inputbar button{width:42px;height:42px;border-radius:50%;border:0;background:var(--red);color:#fff;font-size:17px;flex:none}
+
+/* rich cards inside chat */
+.rc{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.08);font-size:13.5px}
+.rc .rh{background:var(--navy);color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.rc .rh b{font-family:var(--head);font-size:14px;letter-spacing:.3px}
+.rc .rb{padding:12px 14px}
+.rc .kv{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px dashed var(--line)}
+.rc .kv b{text-align:right;white-space:nowrap}
+.rc .kv:last-child{border:0}
+.rc .kv span{color:var(--muted)}
+.bar{height:10px;border-radius:6px;background:#eceef4;overflow:hidden;margin:8px 0 4px}
+.bar i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--gold),var(--red));transition:width 1s ease}
+.hist{display:flex;gap:6px;align-items:flex-end;height:64px;margin-top:14px}
+.hist div{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;color:var(--muted)}
+.hist div i{width:100%;background:#f6c2d1;border-radius:4px 4px 0 0}
+.hist div.hot i{background:var(--red)}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cmp > div{border:1.5px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.cmp > div.rec{border-color:var(--red);background:#fff6f8;position:relative}
+.cmp > div.rec::before{content:"BEST FIT";position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--red);color:#fff;font-size:9.5px;font-weight:700;letter-spacing:1px;padding:2px 8px;border-radius:8px}
+.cmp .gb{font-family:var(--head);font-size:26px;color:var(--navy);line-height:1.1}
+.cmp .pr{font-weight:700;color:var(--red)}
+.cmp small{display:block;color:var(--muted);font-size:11px}
+.why{margin:10px 0 0;padding:0;list-style:none}
+.why li{padding:3px 0 3px 20px;position:relative;font-size:13px}
+.why li::before{content:"✓";position:absolute;left:0;color:var(--green);font-weight:700}
+.success{text-align:center;padding:16px 14px}
+.success .tick{width:52px;height:52px;border-radius:50%;background:#e3f6ec;color:var(--green);display:grid;place-items:center;font-size:26px;margin:0 auto 8px;animation:pop .4s ease}
+.success b{font-family:var(--head);font-size:16px;display:block}
+.storecard{display:flex;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);align-items:center}
+.storecard:last-child{border:0}
+.storecard .dist{font-family:var(--head);color:var(--navy);font-size:15px;min-width:52px;text-align:center}
+.storecard .dist small{display:block;font-family:var(--body);font-size:10px;color:var(--muted)}
+.storecard a{margin-left:auto;font-size:12px;font-weight:700;color:var(--red);text-decoration:none;white-space:nowrap}
+.qr{display:block;margin:6px auto;width:150px;height:150px}
+.otp{display:flex;gap:6px;justify-content:center;margin:6px 0}
+.otp span{width:34px;height:40px;border:1.5px solid var(--line);border-radius:8px;display:grid;place-items:center;font-family:var(--head);font-size:18px}
+
+/* lock screen + notification */
+.lock{position:absolute;inset:0;z-index:20;background:radial-gradient(400px 400px at 20% 10%,rgba(219,10,64,.55),transparent 60%),radial-gradient(400px 400px at 90% 90%,rgba(250,184,7,.25),transparent 60%),linear-gradient(160deg,#0d2043,#050d32);color:#fff;display:none;flex-direction:column;align-items:center;padding-top:80px}
+.lock.show{display:flex}
+.lock .time{font-family:var(--head);font-size:76px;line-height:1;font-weight:700}
+.lock .date{font-size:16px;opacity:.85;margin-top:4px}
+.notif{margin-top:40px;width:88%;background:rgba(255,255,255,.88);backdrop-filter:blur(10px);color:#111;border-radius:20px;padding:12px 14px;cursor:pointer;transform:translateY(-30px);opacity:0;transition:.5s cubic-bezier(.2,.9,.3,1.2)}
+.notif.in{transform:none;opacity:1}
+.notif .nh{display:flex;align-items:center;gap:8px;font-size:12px;color:#555;text-transform:uppercase;letter-spacing:.4px}
+.notif .nh .appi{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-size:12px;color:#fff;background:var(--navy)}
+.notif .nh .appi.wa{background:var(--wa)}
+.notif .nh time{margin-left:auto;text-transform:none}
+.notif b{display:block;margin-top:6px;font-size:14.5px}
+.notif p{margin:2px 0 0;font-size:14px;line-height:1.35;color:#222}
+.tapme{margin-top:18px;font-size:13px;opacity:.7;animation:blink 1.6s infinite}
+
+/* whatsapp skin */
+.phone.wa .statusbar,.phone.wa .chathead{background:var(--wa-dark)}
+.phone.wa .screen{background:#ece5dd}
+.phone.wa .msg.user{background:#dcf8c6;color:#111}
+.phone.wa .chips button{border-color:var(--wa-dark);color:var(--wa-dark)}
+.phone.wa .chips button:hover,.phone.wa .chips button.primary{background:var(--wa-dark);color:#fff}
+.phone.wa .inputbar button{background:var(--wa-dark)}
+.phone.wa .avatar{background:var(--navy)}
+/* web skin */
+.phone.web .statusbar{background:#fff;color:#111}
+.phone.web .urlbar{display:flex}
+.urlbar{display:none;background:#fff;padding:4px 14px 8px;flex:none}
+.urlbar div{flex:1;background:#eef0f4;border-radius:10px;padding:6px 12px;font-size:12.5px;color:#444;text-align:center}
+
+/* insight panel */
+.insight h3{font-size:22px;margin:4px 0 6px}
+.insight .trigger{font-size:14px;color:#2b3c5b;background:#f6f7fb;border-left:3px solid var(--red);padding:10px 12px;border-radius:0 10px 10px 0;margin:12px 0}
+.steps{list-style:none;padding:0;margin:14px 0 0;counter-reset:s}
+.steps li{position:relative;padding:8px 0 8px 38px;font-size:14px;color:#9aa1b4;transition:.3s;counter-increment:s}
+.steps li::before{content:counter(s);position:absolute;left:0;top:6px;width:24px;height:24px;border-radius:50%;border:1.5px solid #d6dae5;display:grid;place-items:center;font-size:12px;font-weight:700}
+.steps li.on{color:var(--text)}
+.steps li.on::before{background:var(--red);border-color:var(--red);color:#fff}
+.steps li.done{color:var(--text)}
+.steps li.done::before{content:"✓";background:var(--green);border-color:var(--green);color:#fff}
+.bigmetric{display:flex;gap:14px;align-items:center;margin-top:16px;background:linear-gradient(135deg,var(--navy),var(--navy-3));color:#fff;border-radius:14px;padding:16px 18px}
+.bigmetric b{font-family:var(--head);font-size:34px;color:var(--gold);white-space:nowrap}
+.bigmetric span{font-size:13.5px;color:#d6dbea}
+.bigmetric small{display:block;color:#8e97b3;font-size:11.5px;margin-top:4px}
+.datachips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.datachips span{font-size:12px;background:#eef0f6;color:var(--navy);padding:4px 10px;border-radius:14px}
+.channelswitch{display:flex;background:#e7eaf3;border-radius:10px;padding:3px;margin-top:14px}
+.channelswitch button{flex:1;border:0;background:transparent;padding:7px;border-radius:8px;font-size:12.5px;font-weight:700;color:var(--muted)}
+.channelswitch button.on{background:#fff;color:var(--navy);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--navy);color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;box-shadow:0 10px 30px rgba(0,0,0,.25);opacity:0;transition:.3s;z-index:2000;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%)}
+
+/* ---------- page layout ---------- */
+.wrap{max-width:1380px;margin:0 auto;padding:28px}
+.cols{display:grid;grid-template-columns:300px 400px 1fr;gap:24px;align-items:start}
+.side h3{font-size:18px;margin:6px 0 4px}
+.sigfield{margin-top:12px}
+.sigfield label{display:block;font-size:12px;font-weight:700;color:var(--navy);margin-bottom:5px}
+.sigfield select{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:9px 10px;font-family:inherit;font-size:13.5px;background:#fff;color:var(--text)}
+.math{font-size:13px}
+.math .eq{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:#f6f7fb;border-radius:10px;padding:10px 12px;margin:10px 0;line-height:1.7;color:#2b3c5b}
+.math .eq b{color:var(--red)}
+.tiers{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+.tiers div{border:1.5px solid var(--line);border-radius:10px;padding:8px 4px;text-align:center;font-size:12px}
+.tiers div b{display:block;font-family:var(--head);font-size:16px;color:var(--navy)}
+.tiers div.pick{border-color:var(--red);background:#fff6f8}
+.restart{margin-left:auto}
+.insight .channelswitch{display:none}
+@media (max-width:1200px){.cols{grid-template-columns:1fr 400px}.cols .insight{grid-column:1/-1}}
+@media (max-width:900px){.wrap{padding:16px}.cols{grid-template-columns:1fr}.topbar .tag{display:none}.phone{transform:scale(.9);transform-origin:top center}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <img src="assets/logo.svg" alt="Red Bull Mobile">
+  <span class="tag">Plan-Fit Assistant · Prototype</span>
+  <button class="btn small restart" id="restart">↻ Restart quiz</button>
+</header>
+
+<main class="wrap">
+  <div class="cols">
+    <div class="side">
+      <div class="card">
+        <div class="eyebrow">Free signals · no typing needed</div>
+        <h3>Who is the visitor?</h3>
+        <p class="muted" style="font-size:13px;margin:0">These are captured automatically at signup. Change them to see the recommendation shift, and the quiz restarts.</p>
+        <div class="sigfield"><label for="sig-ad">Ad clicked</label><select id="sig-ad"></select></div>
+        <div class="sigfield"><label for="sig-device">Device</label><select id="sig-device"></select></div>
+        <div class="sigfield"><label for="sig-channel">Signup channel</label><select id="sig-channel"></select></div>
+      </div>
+      <div class="card math" style="margin-top:16px" id="math"></div>
+    </div>
+
+    <div>
+      <div class="phone" id="phone">
+        <div class="screen">
+          <div class="island"></div>
+          <div class="statusbar"><span>19:40</span><span class="sig">●●●● 5G ▮</span></div>
+          <div class="urlbar"><div>🔒 redbullmobile.om/plans</div></div>
+          <div class="chathead">
+            <div class="avatar">RB</div>
+            <div><b>Red Bull Mobile Assistant</b><small>AI agent · online</small></div>
+            <span class="chan" id="chanlabel">Web</span>
+          </div>
+          <div class="feed" id="feed"></div>
+          <form class="inputbar" id="inputbar" autocomplete="off">
+            <input id="chatinput" placeholder="Type a message…">
+            <button type="submit" aria-label="Send">➤</button>
+          </form>
+          <div class="lock" id="lock"><div class="notif" id="notif"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card insight" id="insight"></div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const ro = (n, d = 3) => 'RO ' + Number(n).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+const roK = n => 'RO ' + (n >= 1e6 ? (n / 1e6).toFixed(2) + 'M' : n >= 1e3 ? (n / 1e3).toFixed(1) + 'k' : Math.round(n));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+function seeded(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+
+const PLANS = [
+  { gb: 46, price: 16 }, { gb: 52, price: 18 }, { gb: 58, price: 20 }, { gb: 80, price: 22 }
+];
+const CUSTOMER = {
+  msisdn: '+968 7912 3456', plan: PLANS[1], used: 46.3, balance: 0.45,
+  renew: '24 Oct', daysLeft: 3, area: 'Al Khoud, Seeb', lat: 23.5880, lng: 58.1700, tenure: '2 yrs 4 mo'
+};
+
+const feed = $('#feed'), phone = $('#phone');
+const CANCEL = Symbol('cancel');
+let session = 0;
+
+function scrollFeed(f = feed) { requestAnimationFrame(() => { f.scrollTop = f.scrollHeight; }); }
+function addMsg(who, html, extra = '', f = feed) {
+  const d = document.createElement('div');
+  d.className = `msg ${who} ${extra}`; d.innerHTML = html;
+  f.appendChild(d); scrollFeed(f); return d;
+}
+async function bot(html, delay = 750, extra = '') {
+  const s = session;
+  const t = document.createElement('div'); t.className = 'typing'; t.innerHTML = '<i></i><i></i><i></i>';
+  feed.appendChild(t); scrollFeed();
+  await sleep(delay);
+  t.remove();
+  if (s !== session) throw CANCEL;
+  return addMsg('bot', html, extra);
+}
+const card = (html, delay = 600) => bot(html, delay, 'wide');
+function sys(html) { return addMsg('sys', html); }
+function user(text) { return addMsg('user', esc(text)); }
+
+/* chips: [{label, fn, primary}] — clicking echoes the label as a user message */
+function chips(list) {
+  const s = session;
+  const w = document.createElement('div'); w.className = 'chips';
+  list.forEach(c => {
+    const b = document.createElement('button'); b.textContent = c.label;
+    if (c.primary) b.classList.add('primary');
+    b.onclick = () => { if (s !== session) return; w.remove(); user(c.label); run(c.fn); };
+    w.appendChild(b);
+  });
+  feed.appendChild(w); scrollFeed(); return w;
+}
+function run(fn, ...args) { Promise.resolve().then(() => fn(...args)).catch(e => { if (e !== CANCEL) console.error(e); }); }
+
+function setChannel(ch) {
+  phone.classList.remove('wa', 'web');
+  if (ch === 'wa') phone.classList.add('wa');
+  if (ch === 'web') phone.classList.add('web');
+  $('#chanlabel').textContent = { wa: 'WhatsApp', web: 'Web', app: 'App' }[ch];
+  $$('.channelswitch button').forEach(b => b.classList.toggle('on', b.dataset.ch === ch));
+}
+function resetPhone(ch = 'app') {
+  session++;
+  feed.innerHTML = '';
+  $('#lock').classList.remove('show');
+  setChannel(ch);
+}
+
+/* lock-screen notification, resolves on tap */
+function notify({ wa = false, app, title, body }) {
+  const s = session;
+  const lock = $('#lock'), n = $('#notif');
+  n.classList.remove('in');
+  n.innerHTML = `<div class="nh"><span class="appi ${wa ? 'wa' : ''}">${wa ? '✆' : 'RB'}</span>${esc(app)}<time>now</time></div><b>${esc(title)}</b><p>${esc(body)}</p>`;
+  lock.classList.add('show');
+  setTimeout(() => n.classList.add('in'), 500);
+  return new Promise((res, rej) => {
+    n.onclick = () => { lock.classList.remove('show'); s === session ? res() : rej(CANCEL); };
+  });
+}
+
+/* ---------- insight panel ---------- */
+let currentSteps = [];
+function setInsight({ eyebrow, title, trigger, steps, metric, data }) {
+  currentSteps = steps;
+  $('#insight').innerHTML = `
+    <div class="eyebrow">${eyebrow}</div>
+    <h3>${title}</h3>
+    <div class="trigger"><b>Trigger:</b> ${trigger}</div>
+    <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">What the agent is doing</div>
+    <ol class="steps">${steps.map(s => `<li>${s}</li>`).join('')}</ol>
+    <div class="bigmetric"><b>${metric.value}</b><span>${metric.label}<small>${metric.source}</small></span></div>
+    <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-top:16px">Data it uses (already exists today)</div>
+    <div class="datachips">${data.map(d => `<span>${d}</span>`).join('')}</div>
+    <div class="channelswitch">
+      <button data-ch="app">App</button><button data-ch="wa">WhatsApp</button><button data-ch="web">Website</button>
+    </div>`;
+  $$('#insight .channelswitch button').forEach(b => b.onclick = () => setChannel(b.dataset.ch));
+  setChannel($('#chanlabel').textContent === 'WhatsApp' ? 'wa' : $('#chanlabel').textContent === 'Web' ? 'web' : 'app');
+}
+function step(i) {
+  $$('#insight .steps li').forEach((li, k) => {
+    li.classList.toggle('done', k < i);
+    li.classList.toggle('on', k === i);
+  });
+}
+function stepsAllDone() { $$('#insight .steps li').forEach(li => { li.classList.remove('on'); li.classList.add('done'); }); }
+
+function successCard(title, sub) {
+  return `<div class="rc"><div class="success"><div class="tick">✓</div><b>${title}</b><div class="muted" style="font-size:13px;margin-top:4px">${sub}</div></div></div>`;
+}
+function qrSvg() {
+  const r = seeded(42), n = 25, c = 6;
+  let cells = '';
+  const finder = (x, y) => `<rect x="${x*c}" y="${y*c}" width="${7*c}" height="${7*c}" fill="#011235"/><rect x="${(x+1)*c}" y="${(y+1)*c}" width="${5*c}" height="${5*c}" fill="#fff"/><rect x="${(x+2)*c}" y="${(y+2)*c}" width="${3*c}" height="${3*c}" fill="#011235"/>`;
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    const inF = (x < 8 && y < 8) || (x > n - 9 && y < 8) || (x < 8 && y > n - 9);
+    if (!inF && r() > .52) cells += `<rect x="${x*c}" y="${y*c}" width="${c}" height="${c}" fill="#011235"/>`;
+  }
+  return `<svg class="qr" viewBox="0 0 ${n*c} ${n*c}"><rect width="100%" height="100%" fill="#fff"/>${cells}${finder(0,0)}${finder(n-7,0)}${finder(0,n-7)}</svg>`;
+}
+
+
+/* ---------- visitor signals (would come from UTM, user-agent and channel) ---------- */
+const SIGNALS = {
+  ad: [
+    { label: 'Instagram ad: "Stream without limits"', boost: 1.1, note: 'You came from our streaming ad, so I allowed a little extra for video' },
+    { label: 'TikTok ad: "More data for less"', boost: 0.9, note: 'You came from our value ad, so I kept the plan lean' },
+    { label: 'Direct visit (no ad)', boost: 1, note: '' },
+  ],
+  device: [
+    { label: 'iPhone 15', boost: 1.05 },
+    { label: 'Samsung Galaxy A15', boost: 1 },
+    { label: 'Entry-level Android', boost: 0.9 },
+  ],
+  channel: [
+    { k: 'web', label: 'Website' },
+    { k: 'app', label: 'App' },
+    { k: 'wa', label: 'WhatsApp' },
+  ],
+};
+const SIG = { ad: SIGNALS.ad[0], device: SIGNALS.device[0], channel: SIGNALS.channel[0] };
+const QUIZ = { on: false };
+Object.keys(SIGNALS).forEach(k => {
+  const el = $('#sig-' + k);
+  el.innerHTML = SIGNALS[k].map((o, i) => `<option value="${i}">${esc(o.label)}</option>`).join('');
+  el.onchange = () => { SIG[k] = SIGNALS[k][+el.value]; run(scnQuiz); };
+});
+
+/* ---------- rule-engine transparency panel ---------- */
+const MATH_EMPTY = `<div class="eyebrow">How the answer is computed</div>
+  <p class="muted" style="margin:8px 0 0">A simple rule engine picks the tier, not the LLM. The working shows up here once the quiz is answered.</p>`;
+function showMath(a, boost, share, gb, plan) {
+  $('#math').innerHTML = `<div class="eyebrow">How the answer is computed</div>
+    <div class="eq">${a.rate} GB/hr × ${a.hrs} hrs × 30 days<br>× ${a.wifi} (Wi-Fi share)<br>× ${boost.toFixed(2)} (ad × device signals)<br>× ${share} (active use)<br>= <b>~${gb} GB / month</b></div>
+    <div style="font-size:12.5px">Rule: smallest tier that covers the estimate</div>
+    <div class="tiers">${PLANS.map(p => `<div class="${p === plan ? 'pick' : ''}"><b>${p.gb}GB</b>RO ${p.price}</div>`).join('')}</div>
+    <p class="muted" style="font-size:12px;margin:10px 0 0">The LLM only writes the "why this plan" explanation.</p>`;
+}
+
+/* ---------- 3. Plan-fit quiz ---------- */
+async function scnQuiz() {
+  resetPhone(SIG.channel.k);
+  QUIZ.on = true; $('#math').innerHTML = MATH_EMPTY;
+  setInsight({
+    eyebrow: 'Plan-fit recommendation at signup',
+    title: 'Right plan from day one',
+    trigger: `A new visitor arrives via <b>${SIG.ad.label}</b> on <b>${SIG.channel.label}</b>. Today signups usually default to the cheapest tier.`,
+    steps: [
+      'Reads free signals: the ad clicked, device and signup channel',
+      'Asks a 4-tap quiz (no typing)',
+      'A rule engine maps the answers to a tier. The LLM does not do the maths.',
+      'LLM writes the "why this plan" explanation',
+      'Usage monitoring corrects the tier in weeks 1–2 if the guess was off',
+    ],
+    metric: { value: '+5–20%', label: 'ARPU lift from AI-driven personalisation and cross-sell', source: 'Jio case-study pattern · combined case: +7% ARPU, 30–35% churn-KPI improvement' },
+    data: ['UTM / ad campaign', 'Device model', 'Signup channel', 'Quiz answers', 'Plan catalogue'],
+  });
+  step(0);
+  sys(`New visitor · signals captured<div class="ctx"><span>${esc(SIG.ad.label)}</span><span>Device: ${esc(SIG.device.label)}</span><span>Channel: ${SIG.channel.label}</span></div>`);
+  await bot('Welcome to Red Bull Mobile! 🪽 Let\'s find your perfect FlexiBULL plan. Just <b>4 taps</b>, no typing.', 500);
+  step(1);
+  const a = {};
+  const ask = async (q, opts, key) => {
+    await bot(q, 600);
+    return new Promise(res => chips(opts.map(([label, v]) => ({ label, fn: () => { a[key] = v; res(); } }))));
+  };
+  await ask('<b>1/4</b> What do you mostly use mobile data for?', [['📱 Social & chat', 1.2], ['🎬 Streaming video', 2.6], ['🎮 Gaming / hotspot', 2.2], ['💼 Work & browsing', 1.0]], 'rate');
+  await ask('<b>2/4</b> How many hours a day are you on mobile data?', [['Under 2', 1.5], ['2–4', 3], ['4–6', 5], ['6+', 7]], 'hrs');
+  await ask('<b>3/4</b> Do you have Wi-Fi at home or work?', [['Yes, mostly on Wi-Fi', .35], ['Sometimes', .6], ['Rarely', 1]], 'wifi');
+  await ask('<b>4/4</b> How do you usually make calls?', [['Mostly WhatsApp/apps', 0], ['Some local calls', 1], ['Lots of local calls', 2]], 'calls');
+  step(2);
+  const adBoost = SIG.ad.boost * SIG.device.boost; // free signals nudge the estimate
+  const activeShare = 0.4; // share of on-data hours actually transferring
+  const gb = Math.round(a.rate * a.hrs * 30 * a.wifi * adBoost * activeShare);
+  const plan = PLANS.find(p => gb <= p.gb) || PLANS[3];
+  QUIZ.on = false;
+  showMath(a, adBoost, activeShare, gb, plan);
+  await bot('Crunching your answers… ⚙️', 900);
+  step(3);
+  await card(`<div class="rc"><div class="rh"><b>YOUR BEST FIT</b><span>est. ~${gb} GB/month</span></div><div class="rb">
+    <div style="text-align:center"><div style="font-family:var(--head);font-size:40px;color:var(--navy);line-height:1">${plan.gb}GB</div>
+    <div style="font-weight:700;color:var(--red);font-size:16px">FlexiBULL · RO ${plan.price}/month</div></div>
+    <ul class="why">
+      <li>Your answers point to about <b>${gb} GB</b> a month${a.rate > 2 ? ', mostly video' : ''}</li>
+      <li>${plan.gb === 80 ? 'Heavy users like you run out on smaller tiers, so 80GB avoids paying for add-ons' : `Leaves ~${plan.gb - gb}GB of headroom so you don't run out before renewal`}</li>
+      <li>${a.calls >= 1 ? 'Local minutes included for your calls' : 'You call over apps, so you don\'t need extra minutes'}</li>
+      ${SIG.ad.note ? `<li>${SIG.ad.note}</li>` : ''}
+      <li>We'll watch your first 2 weeks and suggest a switch if it's not right</li>
+    </ul>
+  </div></div>`, 900);
+  chips([
+    { label: `Get ${plan.gb}GB · eSIM`, fn: () => quizDone(plan, 'eSIM'), primary: true },
+    { label: 'Physical SIM', fn: () => quizDone(plan, 'SIM') },
+    { label: 'Compare all plans', fn: async () => {
+      await card(`<div class="rc"><div class="rb">${PLANS.map(p => `<div class="kv"><span>FlexiBULL ${p.gb}GB</span><b ${p === plan ? 'style="color:var(--red)"' : ''}>RO ${p.price}${p === plan ? ' ★' : ''}</b></div>`).join('')}</div></div>`);
+      chips([{ label: `Get ${plan.gb}GB`, fn: () => quizDone(plan, 'eSIM'), primary: true }]);
+    } },
+  ]);
+}
+async function quizDone(plan, type) {
+  step(4);
+  await card(successCard(`FlexiBULL ${plan.gb}GB added`, `${type}${type === 'eSIM' ? ' (RO 1.0)' : ''} · taking you to checkout and ID verification…`), 800);
+  stepsAllDone();
+}
+
+/* ---------- page wiring ---------- */
+$('#inputbar').addEventListener('submit', e => {
+  e.preventDefault();
+  const v = $('#chatinput').value.trim();
+  if (!v) return;
+  $('#chatinput').value = '';
+  user(v);
+  run(async () => {
+    if (QUIZ.on) return bot('Just tap one of the options above 👆 No typing needed.', 500);
+    await bot('Want to try the quiz again with different answers?', 500);
+    chips([{ label: '↻ Retake the quiz', fn: scnQuiz, primary: true }]);
+  });
+});
+$('#restart').onclick = () => run(scnQuiz);
+run(scnQuiz);
+</script>
+</body>
+</html>
